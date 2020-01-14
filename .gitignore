@@ -1,3 +1,4 @@
 venv/
 __pycharm__/
 .idea/
+./detection/data
