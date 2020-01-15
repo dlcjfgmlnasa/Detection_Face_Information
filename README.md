@@ -1,6 +1,6 @@
 # Detection_Face_Information
 
-수정 날짜 (2020-01-06)
+수정 날짜 (2020-01-15)
 
 ### Goals
 
@@ -21,4 +21,4 @@
 
 
 ### Dataset
-- https://www.dropbox.com/s/08opp6xeef8z3rs/data.egg?dl=0
+- https://www.dropbox.com/s/z1mes3m1gk760v3/data.tar?dl=0
