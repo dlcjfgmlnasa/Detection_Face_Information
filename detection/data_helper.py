@@ -39,17 +39,21 @@ class FaceImageDataset(Dataset):
                                              transforms.RandomHorizontalFlip(),
                                              transforms.ToTensor(),
                                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                                  std=[0.229, 0.224, 0.225]),])
+                                                                  std=[0.229, 0.224, 0.225])])
             img = preprocess(img)
 
         elif self.mode == 'validation':
             preprocess = transforms.Compose([transforms.Resize(img_size),
-                                             transforms.ToTensor()])
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                  std=[0.229, 0.224, 0.225])])
             img = preprocess(img)
 
         elif self.mode == 'test':
             preprocess = transforms.Compose([transforms.Resize(img_size),
-                                             transforms.ToTensor()])
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                  std=[0.229, 0.224, 0.225])])
             img = preprocess(img)
 
         return img.to(self.device)
