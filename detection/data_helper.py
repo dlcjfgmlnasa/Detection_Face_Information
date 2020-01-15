@@ -5,6 +5,8 @@ from PIL import Image
 from torchvision import transforms
 from torch.utils.data import Dataset
 
+img_size = 64
+
 
 class FaceImageDataset(Dataset):
     def __init__(self, root, info, device, mode='train'):
@@ -32,30 +34,25 @@ class FaceImageDataset(Dataset):
     def image_preprocess(self, img_path):
         img = Image.open(img_path)
         if self.mode == 'train':
-            preprocess = transforms.Compose([
-                transforms.Resize(64),
-                transforms.RandomCrop(60),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225]),
-            ])
-            img = preprocess(img).to(self.device)
-            return img
+            preprocess = transforms.Compose([transforms.Resize(img_size),
+                                             transforms.RandomCrop(60),
+                                             transforms.RandomHorizontalFlip(),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                  std=[0.229, 0.224, 0.225]),])
+            img = preprocess(img)
+
         elif self.mode == 'validation':
-            preprocess = transforms.Compose([
-                transforms.Resize(64),
-                transforms.ToTensor()
-            ])
-            img = preprocess(img).to(self.device)
-            return img
+            preprocess = transforms.Compose([transforms.Resize(img_size),
+                                             transforms.ToTensor()])
+            img = preprocess(img)
+
         elif self.mode == 'test':
-            preprocess = transforms.Compose([
-                transforms.Resize(64),
-                transforms.ToTensor()
-            ])
-            img = preprocess(img).to(self.device)
-            return img
+            preprocess = transforms.Compose([transforms.Resize(img_size),
+                                             transforms.ToTensor()])
+            img = preprocess(img)
+
+        return img.to(self.device)
 
     def __len__(self):
         return len(self.info)
