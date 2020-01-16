@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import torch.nn as nn
-from detection.classify import Output
+from detection.models.classify import Output
 
 cfg = {
     'vgg11': [64,     'M', 128,      'M', 256, 256,           'M', 512, 512,           'M', 512, 512,           'M'],
