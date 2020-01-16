@@ -34,8 +34,8 @@ class FaceImageDataset(Dataset):
     def image_preprocess(self, img_path):
         img = Image.open(img_path)
         if self.mode == 'train':
-            preprocess = transforms.Compose([transforms.Resize(img_size),
-                                             transforms.RandomCrop(60),
+            preprocess = transforms.Compose([transforms.Resize(img_size+4),
+                                             transforms.RandomCrop(img_size),
                                              transforms.RandomHorizontalFlip(),
                                              transforms.ToTensor(),
                                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
