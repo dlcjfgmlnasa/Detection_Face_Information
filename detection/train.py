@@ -29,7 +29,7 @@ def get_args():
 
     # Model
     vgg_network = parser.add_argument_group(title='VGG Network Option')
-    vgg_network.add_argument('--vgg_type', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19'], type=str, default='vgg11')
+    vgg_network.add_argument('--vgg_type', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19'], type=str, default='vgg13')
     vgg_network.add_argument('--vgg_batch_norm', type=bool, default=True)
 
     inception_network = parser.add_argument_group('Google Inception Network Option')
@@ -45,7 +45,10 @@ class Trainer(object):
         self.model = self.get_model()       # Define FaceRecognition
         self.sex_branch_criterion = nn.CrossEntropyLoss()
         self.age_branch_criterion = nn.CrossEntropyLoss()
-        self.optimizer = opt.Adam(self.model.parameters(), lr=self.arguments.learning_rate)
+        self.optimizer = opt.SGD(
+            self.model.parameters(),
+            lr=self.arguments.learning_rate
+        )
 
     def train(self):
         # Train DataLoader
@@ -128,7 +131,7 @@ class Trainer(object):
         )
         age_loss = self.age_branch_criterion(
             input=age_out,
-            target=sex_tar
+            target=age_tar
         )
 
         # calculation accuracy
@@ -202,8 +205,8 @@ class Trainer(object):
         print(
             '[ {0} ] => '
             '[Epoch] : {1:3d}  [Iter] : {2:3d}  [Total Loss] : {3:9.4f}  '
-            '[Sex Loss] : {4:9.4f}  [Age Loss] : {5:9.4f}  '
-            '[Sex Accuracy] : {6:9.4f}  [Age Accuracy] : {7:9.4f}'.format(
+            '[Sex Loss] : {4:9.4f}  [Sex Accuracy] : {6:9.4f}  '
+            '[Age Loss] : {5:9.4f}  [Age Accuracy] : {7:9.4f}'.format(
                     mode,
                     epoch, it, total_loss,
                     sex_loss, age_loss,
