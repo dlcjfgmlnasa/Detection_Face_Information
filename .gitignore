@@ -1,4 +1,6 @@
 venv/
 __pycharm__/
 .idea/
-./detection/data
+./detection/data/
+./detection/__pycharm__/
+./detection/models/__pycharm__/
