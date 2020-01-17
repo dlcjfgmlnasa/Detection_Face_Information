@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import torch.nn as nn
-from detection.models.classify import Output
+from detection.models.classify import Classify
 
 cfg = {
     'vgg11': [64,     'M', 128,      'M', 256, 256,           'M', 512, 512,           'M', 512, 512,           'M'],
@@ -16,12 +16,12 @@ class VGG(nn.Module):
         self.vgg_type = vgg_type
         self.batch_norm = batch_norm
         self.cnn = self.cnn_layers()
-        self.out = Output()
+        self.classify = Classify()
 
     def forward(self, inputs):
         cnn_output = self.cnn(inputs)
         x = cnn_output.view(cnn_output.size(0), -1)
-        x = self.out(x)
+        x = self.classify(x)
         return x
 
     def cnn_layers(self):
@@ -45,3 +45,7 @@ class VGG(nn.Module):
             input_channel = output_channel
 
         return nn.Sequential(*layers)
+
+
+if __name__ == '__main__':
+    pass
