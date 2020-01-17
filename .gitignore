@@ -4,3 +4,4 @@ __pycharm__/
 ./detection/data/
 ./detection/__pycharm__/
 ./detection/models/__pycharm__/
+./detection/models/__pycache__/
