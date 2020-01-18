@@ -1,6 +1,6 @@
 # Detection_Face_Information
 
-수정 날짜 (2020-01-15)
+수정 날짜 (2020-01-18)
 
 ### Goals
 
