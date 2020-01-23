@@ -5,3 +5,4 @@ __pycharm__/
 ./detection/__pycharm__/
 ./detection/models/__pycharm__/
 ./detection/models/__pycache__/
+.DS_Store
