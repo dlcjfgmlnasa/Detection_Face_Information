@@ -31,7 +31,7 @@ class AgeClassify(nn.Module):
             nn.Linear(4096, 4096),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, 100)
+            nn.Linear(4096, 10)
         )
 
     def forward(self, inputs):
