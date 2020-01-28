@@ -24,11 +24,12 @@ class FaceImageDataset(Dataset):
 
         img = self.image_preprocess(img_path)
         sex = (0 if temp['sex'] == 'male' else 1)
+        age = self._age_categorization(temp['age'])
 
         return {
             'img': img,
             'sex': sex,
-            'age': temp['age']
+            'age': age
         }
 
     def image_preprocess(self, img_path):
@@ -57,6 +58,11 @@ class FaceImageDataset(Dataset):
             img = preprocess(img)
 
         return img.to(self.device)
+
+    @staticmethod
+    def _age_categorization(age):
+        age = age / 10
+        return int(age)
 
     def __len__(self):
         return len(self.info)

@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as opt
 from torch.utils.data import DataLoader
 from detection.data_helper import FaceImageDataset, split_dataset
+from torch.utils.tensorboard import SummaryWriter
 
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -17,14 +18,16 @@ def get_args():
     train = parser.add_argument_group('Train Option')
     train.add_argument('--img_path', type=str, default=os.path.join('.', 'data', 'image'))
     train.add_argument('--info_path', type=str, default=os.path.join('.', 'data', 'information.json'))
+    train.add_argument('--save_path', type=str, default=os.path.join('.', 'store'))
     train.add_argument('--split_rate', type=list, default=[0.8, 0.1, 0.1])
 
     train.add_argument('--epochs', type=int, default=80)
-    train.add_argument('--batch_size', type=int, default=500)
+    train.add_argument('--batch_size', type=int, default=200)
     train.add_argument('--model', choices=['vgg', 'inception'], type=str, default='vgg')
     train.add_argument('--learning_rate', type=float, default=0.01)
-    train.add_argument('--print_train_step', type=int, default=1)
-    train.add_argument('--print_val_step', type=int, default=200)
+    train.add_argument('--momentum_rate', type=float, default=0.08)
+    train.add_argument('--print_train_step', type=int, default=10)
+    train.add_argument('--print_val_step', type=int, default=100)
     train.add_argument('--saving_point_step', type=int, default=100)
 
     # Model
@@ -47,8 +50,14 @@ class Trainer(object):
         self.age_branch_criterion = nn.CrossEntropyLoss()
         self.optimizer = opt.SGD(
             self.model.parameters(),
-            lr=self.arguments.learning_rate
+            lr=self.arguments.learning_rate,
+            momentum=self.arguments.momentum_rate
         )
+        self.writer = SummaryWriter('runs/model_{}-batch_{}-lr_{}'.format(
+            self.arguments.model,
+            self.arguments.batch_size,
+            self.arguments.learning_rate
+        ))
 
     def train(self):
         # Train DataLoader
@@ -59,6 +68,10 @@ class Trainer(object):
         self.model.train()
 
         # Training
+        total_it = 0
+        val_total_loss, val_total_sex_loss, val_total_age_loss, val_total_sex_acc, val_total_age_acc = 0, 0, 0, 0, 0
+
+        # Training Start...
         for epoch in range(self.arguments.epochs):
             for i, data in enumerate(train_loader):
                 out = self.model(data['img'])
@@ -67,7 +80,9 @@ class Trainer(object):
                 out = self.get_accuracy_loss(out=out, tar=data)
                 loss = out['loss']['sex'] + out['loss']['age']
 
+                # Train 결과 출력
                 if i % self.arguments.print_train_step == 0:
+                    # Console 출력
                     self.print_fn(mode='Train',
                                   epoch=epoch, it=i,
                                   total_loss=loss,
@@ -76,7 +91,16 @@ class Trainer(object):
                                   sex_accuracy=out['accuracy']['sex'].item(),
                                   age_accuracy=out['accuracy']['age'].item())
 
+                    # Tensorboard 출력
+                    self.writer.add_scalar('train/loss', loss.item(), total_it)
+                    self.writer.add_scalar('train_sex/loss', out['loss']['sex'].item(), total_it)
+                    self.writer.add_scalar('train_sex/accuracy', out['accuracy']['sex'].item(), total_it)
+                    self.writer.add_scalar('train_age/loss', out['loss']['age'].item(), total_it)
+                    self.writer.add_scalar('train_age/accuracy', out['accuracy']['age'].item(), total_it)
+
+                # Validation 결과 출력
                 if i % self.arguments.print_val_step == 0:
+                    # Console 출력
                     val_total_loss, val_total_sex_loss, val_total_age_loss, val_total_sex_acc, val_total_age_acc = \
                         self.val()
                     self.print_fn(mode=' Val ',
@@ -85,9 +109,40 @@ class Trainer(object):
                                   sex_loss=val_total_sex_loss, age_loss=val_total_age_loss,
                                   sex_accuracy=val_total_sex_acc, age_accuracy=val_total_age_acc)
 
+                    # Tensorboard 출력
+                    self.writer.add_scalar('val/loss', val_total_loss, total_it)
+                    self.writer.add_scalar('val_sex/loss', val_total_sex_loss, total_it)
+                    self.writer.add_scalar('val_sex/accuracy', val_total_sex_acc, total_it)
+                    self.writer.add_scalar('val_age/loss', val_total_age_loss, total_it)
+                    self.writer.add_scalar('val_age/accuracy', val_total_age_acc, total_it)
+
+                # 모델 저장
+                if i % self.arguments.saving_point_step == 0:
+                    self.save_model(
+                        epochs=epoch,
+                        it=total_it,
+                        train_loss_accuracy={
+                            'total_loss': loss,
+                            'sex_loss': out['loss']['sex'].item(),
+                            'age_loss': out['loss']['age'].item(),
+                            'sex_accuracy': out['accuracy']['sex'].item(),
+                            'age_accuracy': out['accuracy']['age'].item()
+                        },
+                        val_loss_accuracy={
+                            'total_loss': val_total_loss,
+                            'sex_loss': val_total_sex_loss,
+                            'age_loss': val_total_age_loss,
+                            'sex_accuracy': val_total_sex_acc,
+                            'age_accuracy': val_total_age_acc
+                        }
+                    )
+
+                # optimizer & back propagation
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+                
+                total_it += 1
 
     def val(self):
         # Validation DataLoader
@@ -185,6 +240,27 @@ class Trainer(object):
         elif model_name == 'inception':
             from detection.models.inception import InceptionV1
             return
+        
+    def save_model(self, epochs, it, train_loss_accuracy, val_loss_accuracy):
+        filename = 'model_{0}-batch_size-{1}_lr-{2}_{3:06d}.pth'.format(
+            self.arguments.model, self.arguments.batch_size, self.arguments.learning_rate, it
+        )
+        filepath = os.path.join(self.arguments.save_path, filename)
+        torch.save({
+            'parameter': {
+                'epoch': epochs,
+                'iterator': it,
+                'batch_size': self.arguments.batch_size,
+                'learning_rate': self.arguments.learning_rate,
+                'momentum_rate': self.arguments.momentum_rate
+            },
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'model_type': self.arguments.model,
+            'model_parameter': self.get_parameter(),
+            'train_loss_accuracy': train_loss_accuracy,
+            'val_loss_accuracy': val_loss_accuracy
+        }, filepath)
 
     def get_parameter(self):
         model_name = self.arguments.model
