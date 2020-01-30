@@ -37,7 +37,6 @@ def get_args():
 
     inception_network = parser.add_argument_group('Google Inception Network Option')
     inception_network.add_argument('--inception_type', choices=['inception_v1'], default='inception-v1')
-
     return parser.parse_args()
 
 
@@ -53,8 +52,13 @@ class Trainer(object):
             lr=self.arguments.learning_rate,
             momentum=self.arguments.momentum_rate
         )
+
+        self.model_name = None
+        if self.arguments.model == 'vgg':
+            self.model_name = self.arguments.vgg_type
+
         self.writer = SummaryWriter('runs/model_{}-batch_{}-lr_{}'.format(
-            self.arguments.model,
+            self.model_name,
             self.arguments.batch_size,
             self.arguments.learning_rate
         ))
@@ -243,7 +247,7 @@ class Trainer(object):
         
     def save_model(self, epochs, it, train_loss_accuracy, val_loss_accuracy):
         filename = 'model_{0}-batch_size-{1}_lr-{2}_{3:06d}.pth'.format(
-            self.arguments.model, self.arguments.batch_size, self.arguments.learning_rate, it
+            self.model_name, self.arguments.batch_size, self.arguments.learning_rate, it
         )
         filepath = os.path.join(self.arguments.save_path, filename)
         torch.save({
