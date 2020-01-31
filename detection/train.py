@@ -22,13 +22,12 @@ def get_args():
     train.add_argument('--split_rate', type=list, default=[0.8, 0.1, 0.1])
 
     train.add_argument('--epochs', type=int, default=80)
-    train.add_argument('--batch_size', type=int, default=200)
+    train.add_argument('--batch_size', type=int, default=500)
     train.add_argument('--model', choices=['vgg', 'inception'], type=str, default='vgg')
-    train.add_argument('--learning_rate', type=float, default=0.01)
-    train.add_argument('--momentum_rate', type=float, default=0.08)
+    train.add_argument('--learning_rate', type=float, default=0.0001)
     train.add_argument('--print_train_step', type=int, default=10)
     train.add_argument('--print_val_step', type=int, default=100)
-    train.add_argument('--saving_point_step', type=int, default=100)
+    train.add_argument('--saving_point_step', type=int, default=1000)
 
     # Model
     vgg_network = parser.add_argument_group(title='VGG Network Option')
@@ -47,10 +46,9 @@ class Trainer(object):
         self.model = self.get_model()       # Define FaceRecognition
         self.sex_branch_criterion = nn.CrossEntropyLoss()
         self.age_branch_criterion = nn.CrossEntropyLoss()
-        self.optimizer = opt.SGD(
+        self.optimizer = opt.Adam(
             self.model.parameters(),
-            lr=self.arguments.learning_rate,
-            momentum=self.arguments.momentum_rate
+            lr=self.arguments.learning_rate
         )
 
         self.model_name = None
@@ -96,11 +94,11 @@ class Trainer(object):
                                   age_accuracy=out['accuracy']['age'].item())
 
                     # Tensorboard 출력
-                    self.writer.add_scalar('train/loss', loss.item(), total_it)
-                    self.writer.add_scalar('train_sex/loss', out['loss']['sex'].item(), total_it)
-                    self.writer.add_scalar('train_sex/accuracy', out['accuracy']['sex'].item(), total_it)
-                    self.writer.add_scalar('train_age/loss', out['loss']['age'].item(), total_it)
-                    self.writer.add_scalar('train_age/accuracy', out['accuracy']['age'].item(), total_it)
+                    self.writer.add_scalar('01.train/loss', loss.item(), total_it)
+                    self.writer.add_scalar('02.train_sex/loss', out['loss']['sex'].item(), total_it)
+                    self.writer.add_scalar('02.train_sex/accuracy', out['accuracy']['sex'].item(), total_it)
+                    self.writer.add_scalar('03.train_age/loss', out['loss']['age'].item(), total_it)
+                    self.writer.add_scalar('03.train_age/accuracy', out['accuracy']['age'].item(), total_it)
 
                 # Validation 결과 출력
                 if i % self.arguments.print_val_step == 0:
@@ -114,14 +112,14 @@ class Trainer(object):
                                   sex_accuracy=val_total_sex_acc, age_accuracy=val_total_age_acc)
 
                     # Tensorboard 출력
-                    self.writer.add_scalar('val/loss', val_total_loss, total_it)
-                    self.writer.add_scalar('val_sex/loss', val_total_sex_loss, total_it)
-                    self.writer.add_scalar('val_sex/accuracy', val_total_sex_acc, total_it)
-                    self.writer.add_scalar('val_age/loss', val_total_age_loss, total_it)
-                    self.writer.add_scalar('val_age/accuracy', val_total_age_acc, total_it)
+                    self.writer.add_scalar('01.val/loss', val_total_loss, total_it)
+                    self.writer.add_scalar('02.val_sex/loss', val_total_sex_loss, total_it)
+                    self.writer.add_scalar('02.val_sex/accuracy', val_total_sex_acc, total_it)
+                    self.writer.add_scalar('03.val_age/loss', val_total_age_loss, total_it)
+                    self.writer.add_scalar('03.val_age/accuracy', val_total_age_acc, total_it)
 
                 # 모델 저장
-                if i % self.arguments.saving_point_step == 0:
+                if total_it % self.arguments.saving_point_step == 0:
                     self.save_model(
                         epochs=epoch,
                         it=total_it,
@@ -255,8 +253,7 @@ class Trainer(object):
                 'epoch': epochs,
                 'iterator': it,
                 'batch_size': self.arguments.batch_size,
-                'learning_rate': self.arguments.learning_rate,
-                'momentum_rate': self.arguments.momentum_rate
+                'learning_rate': self.arguments.learning_rate
             },
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
