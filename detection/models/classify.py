@@ -7,13 +7,15 @@ class SexClassify(nn.Module):
     def __init__(self, input_size):
         super().__init__()
         self.classify = nn.Sequential(
-            nn.Linear(input_size, 4096),
+            nn.Linear(input_size, 1000),
+            nn.BatchNorm1d(1000),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, 4096),
+            nn.Linear(1000, 1000),
+            nn.BatchNorm1d(1000),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, 2)
+            nn.Linear(1000, 2)
         )
 
     def forward(self, inputs):
@@ -25,13 +27,19 @@ class AgeClassify(nn.Module):
     def __init__(self, input_size):
         super().__init__()
         self.classify = nn.Sequential(
-            nn.Linear(input_size, 4096),
+            nn.Linear(input_size, 1000),
+            nn.BatchNorm1d(1000),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, 4096),
+            nn.Linear(1000, 1000),
+            nn.BatchNorm1d(1000),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, 10)
+            nn.Linear(1000, 1000),
+            nn.BatchNorm1d(1000),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5),
+            nn.Linear(1000, 10)
         )
 
     def forward(self, inputs):
@@ -48,6 +56,6 @@ class Classify(nn.Module):
     def forward(self, inputs):
         sex_out = self.sex_classify(inputs)
         age_out = self.age_classify(inputs)
-        sex_out = f.softmax(sex_out, dim=-1)
-        age_out = f.softmax(age_out, dim=-1)
+        sex_out = f.log_softmax(sex_out, dim=-1)
+        age_out = f.log_softmax(age_out, dim=-1)
         return {'sex': sex_out, 'age': age_out}
