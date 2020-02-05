@@ -33,3 +33,5 @@ class DatacollectionAdmin(admin.ModelAdmin):
         "created",
     )
 
+    change_list_template = "change_list_graph.html"
+

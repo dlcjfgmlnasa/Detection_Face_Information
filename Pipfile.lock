@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0d4ee7b319e41223157ff5a235074c83c08aea4ddaeac06f1d2a163b6a631d85"
+            "sha256": "2dc57fbea84e2b611cd0fbb3272c7b65bfadaa08ebf088c9b9fd62f132ee52f3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,14 @@
             ],
             "index": "pypi",
             "version": "==2.2.5"
+        },
+        "django-chartjs": {
+            "hashes": [
+                "sha256:7dacc6bb48fadcb00c07ba8656e4e97c50f5f05defc988976ed4f609cc39a7e9",
+                "sha256:f48ebd04b2dd4036b3bed44520b6876996338d1374f36b8915d27899e4becbe9"
+            ],
+            "index": "pypi",
+            "version": "==2.0.0"
         },
         "pytz": {
             "hashes": [

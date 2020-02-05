@@ -34,6 +34,7 @@ CUSTOM_APPS = [
     "products.apps.ProductsConfig",
     "products_users.apps.ProductsUsersConfig",
     "datacollections.apps.DatacollectionsConfig",
+    "chartjs",
 ]
 INSTALLED_APPS = [
     "django.contrib.admin",
