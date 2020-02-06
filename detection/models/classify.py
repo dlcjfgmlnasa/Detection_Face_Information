@@ -35,10 +35,6 @@ class AgeClassify(nn.Module):
             nn.BatchNorm1d(1000),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Linear(1000, 1000),
-            nn.BatchNorm1d(1000),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
             nn.Linear(1000, 10)
         )
 
