@@ -52,6 +52,6 @@ class Classify(nn.Module):
     def forward(self, inputs):
         sex_out = self.sex_classify(inputs)
         age_out = self.age_classify(inputs)
-        sex_out = f.log_softmax(sex_out, dim=-1)
-        age_out = f.log_softmax(age_out, dim=-1)
+        # sex_out = f.log_softmax(sex_out, dim=-1)
+        # age_out = f.log_softmax(age_out, dim=-1)
         return {'sex': sex_out, 'age': age_out}
