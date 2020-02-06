@@ -21,21 +21,21 @@ def get_args():
     train.add_argument('--save_path', type=str, default=os.path.join('.', 'store'))
     train.add_argument('--split_rate', type=list, default=[0.8, 0.1, 0.1])
 
-    train.add_argument('--epochs', type=int, default=80)
-    train.add_argument('--batch_size', type=int, default=500)
-    train.add_argument('--model', choices=['vgg', 'inception'], type=str, default='vgg')
-    train.add_argument('--learning_rate', type=float, default=0.0001)
+    train.add_argument('--epochs', type=int, default=20)
+    train.add_argument('--batch_size', type=int, default=400)
+    train.add_argument('--model', choices=['vgg', 'fr_net'], type=str, default='fr_net')
+    train.add_argument('--learning_rate', type=float, default=0.01)
     train.add_argument('--print_train_step', type=int, default=10)
     train.add_argument('--print_val_step', type=int, default=100)
     train.add_argument('--saving_point_step', type=int, default=1000)
 
     # Model
     vgg_network = parser.add_argument_group(title='VGG Network Option')
-    vgg_network.add_argument('--vgg_type', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19'], type=str, default='vgg13')
+    vgg_network.add_argument('--vgg_type', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg-s'], type=str,
+                             default='vgg-s')
     vgg_network.add_argument('--vgg_batch_norm', type=bool, default=True)
 
-    inception_network = parser.add_argument_group('Google Inception Network Option')
-    inception_network.add_argument('--inception_type', choices=['inception_v1'], default='inception-v1')
+    fr_network = parser.add_argument_group(title='Face Recognition Network Option')
     return parser.parse_args()
 
 
@@ -54,6 +54,8 @@ class Trainer(object):
         self.model_name = None
         if self.arguments.model == 'vgg':
             self.model_name = self.arguments.vgg_type
+        elif self.arguments.model == 'fr_net':
+            self.model_name = self.arguments.model
 
         self.writer = SummaryWriter('runs/model_{}-batch_{}-lr_{}'.format(
             self.model_name,
@@ -71,6 +73,7 @@ class Trainer(object):
 
         # Training
         total_it = 0
+        loss, out = None, None
         val_total_loss, val_total_sex_loss, val_total_age_loss, val_total_sex_acc, val_total_age_acc = 0, 0, 0, 0, 0
 
         # Training Start...
@@ -145,6 +148,26 @@ class Trainer(object):
                 self.optimizer.step()
                 
                 total_it += 1
+
+        # save model
+        self.save_model(
+            epochs=self.arguments.epochs,
+            it=total_it,
+            train_loss_accuracy={
+                'total_loss': loss,
+                'sex_loss': out['loss']['sex'].item(),
+                'age_loss': out['loss']['age'].item(),
+                'sex_accuracy': out['accuracy']['sex'].item(),
+                'age_accuracy': out['accuracy']['age'].item()
+            },
+            val_loss_accuracy={
+                'total_loss': val_total_loss,
+                'sex_loss': val_total_sex_loss,
+                'age_loss': val_total_age_loss,
+                'sex_accuracy': val_total_sex_acc,
+                'age_accuracy': val_total_age_acc
+            }
+        )
 
     def val(self):
         # Validation DataLoader
@@ -239,9 +262,9 @@ class Trainer(object):
         if model_name == 'vgg':
             from detection.models.vgg import VGG
             return VGG(**parameter)
-        elif model_name == 'inception':
-            from detection.models.inception import InceptionV1
-            return
+        elif model_name == 'fr_net':
+            from detection.models.face_recognition import FRNet
+            return FRNet()
         
     def save_model(self, epochs, it, train_loss_accuracy, val_loss_accuracy):
         filename = 'model_{0}-batch_size-{1}_lr-{2}_{3:06d}.pth'.format(
