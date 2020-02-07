@@ -55,11 +55,12 @@ class FRNet(nn.Module):
             ),
             NaiveInceptionV1(
                 in_channels=96, _1x1=32, _3x3=32, _5x5=16, _pool_proj=16
-            )
+            ),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         # fully connected layer
-        self.fc = Classify(input_size=98304)
+        self.fc = Classify(input_size=24576)
 
     def forward(self, inputs):
         x = self.stem(inputs)
@@ -67,3 +68,6 @@ class FRNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
+
+
+
