@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 import os
 import json
+import random
+import pandas as pd
 from PIL import Image
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -71,6 +73,7 @@ class FaceImageDataset(Dataset):
 def split_dataset(path, split_rate: list):
     with open(path, 'r') as fp:
         dataset = json.load(fp)
+    random.shuffle(dataset)
     size = len(dataset)
 
     train_set = dataset[0: int(size*split_rate[0])]
@@ -78,3 +81,25 @@ def split_dataset(path, split_rate: list):
     validation_set = dataset[int(size*(split_rate[0] + split_rate[1])):]
     return train_set, test_set, validation_set
 
+
+def dataset_info(path):
+    with open(path, 'r') as fp:
+        dataset = json.load(fp)
+    df = pd.DataFrame(dataset)
+    df['age'] = (df['age'] / 10).astype(int)
+    age_temp, sex_temp = [], []
+    age_group, sex_group = df.groupby('age'), df.groupby('sex')
+    for age, group in age_group.groups.items():
+        age_temp.append({
+            'age': '{}대'.format(age * 10),
+            'count': len(group)
+        })
+        
+    for sex, group in sex_group.groups.items():
+        sex_temp.append({
+            'sex': sex,
+            'count': len(group)
+        })
+    age_df = pd.DataFrame(age_temp)
+    sex_df = pd.DataFrame(sex_temp)
+    return {'age': age_df, 'sex': sex_df}
