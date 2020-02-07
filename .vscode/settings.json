@@ -4,5 +4,10 @@
   "python.linting.enabled": true,
   "python.formatting.provider": "black",
   "python.linting.flake8Args": ["--max - line - length == 40"],
-  "python.pythonPath": "C:\\Users\\THBan\\.virtualenvs\\FaceDetection-6ivrNKzg\\Scripts\\python.exe"
+  "python.pythonPath": "C:\\Users\\THBan\\.virtualenvs\\FaceDetection-6ivrNKzg\\Scripts\\python.exe",
+  "files.associations": {
+    "**/templates/*.html": "django-html",
+    "**/templates/*": "django-txt"
+  },
+  "emmet.includeLanguages": { "django-html": "html" }
 }
