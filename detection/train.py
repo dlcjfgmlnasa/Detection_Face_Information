@@ -21,7 +21,7 @@ def get_args():
     train.add_argument('--save_path', type=str, default=os.path.join('.', 'store'))
     train.add_argument('--split_rate', type=list, default=[0.8, 0.1, 0.1])
 
-    train.add_argument('--epochs', type=int, default=20)
+    train.add_argument('--epochs', type=int, default=15)
     train.add_argument('--batch_size', type=int, default=400)
     train.add_argument('--model', choices=['vgg', 'fr_net'], type=str, default='fr_net')
     train.add_argument('--learning_rate', type=float, default=0.01)
