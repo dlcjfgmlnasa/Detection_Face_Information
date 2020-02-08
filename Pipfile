@@ -11,6 +11,7 @@ black = "*"
 [packages]
 django = "==2.2.5"
 django-chartjs = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.7"

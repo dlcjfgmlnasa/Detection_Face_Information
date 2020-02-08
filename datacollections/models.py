@@ -17,6 +17,7 @@ class Datacollection(models.Model):
         (GENDER_OTHER, "Other"),
     )
 
+    image = models.ImageField(upload_to="data_photos", blank=True)
     data_gender = models.CharField(choices=GENDER_CHOICES, max_length=10, blank=True)
     data_age = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
@@ -28,4 +29,4 @@ class Datacollection(models.Model):
         null=True,
         blank=True,
     )
-   
+
