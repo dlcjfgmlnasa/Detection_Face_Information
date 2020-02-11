@@ -6,6 +6,8 @@ import time
 import gridfs
 import pymongo
 import argparse
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def get_args():
@@ -29,7 +31,8 @@ def get_cpu_serial():
 
 
 def db_connection():
-    client = pymongo.MongoClient('mongodb://localhost:27017/')
+    mongo_url = os.getenv('MONGO_URL')
+    client = pymongo.MongoClient(mongo_url)
     collection = client.image_collection
     return collection
 
@@ -70,7 +73,6 @@ def main(arguments):
                 img_id = fs.put(crop_img, encoding='utf-8')
 
                 temp.append({
-                    'id': img_id,
                     'cpu_serial': cpu_serial,
                     'image': crop_img
                 })
