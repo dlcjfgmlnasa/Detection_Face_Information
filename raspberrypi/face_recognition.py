@@ -3,6 +3,7 @@ import os
 import sys
 import cv2
 import time
+import copy
 import gridfs
 import pymongo
 import argparse
@@ -12,8 +13,8 @@ load_dotenv()
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cascade', type=str, default='haarcascade_frontface.xml')
-    parser.add_argument('--sleep_second', type=int, default=1)  
+    parser.add_argument('--face_cascade', type=str, default='haarcascade_frontface.xml')
+    parser.add_argument('--sleep_second', type=int, default=0.5)  
     return parser.parse_args()
 
 
@@ -39,7 +40,7 @@ def db_connection():
 
 def main(arguments):
     # Load the cascade
-    face_cascade = cv2.CascadeClassifier(arguments.cascade)
+    face_cascade = cv2.CascadeClassifier(arguments.face_cascade)
 
     # Load CPU Serial
     cpu_serial = get_cpu_serial()
@@ -50,8 +51,11 @@ def main(arguments):
     fs = gridfs.GridFS(image_collection)
 
     # video capture
-    cap = cv2.VideoCapture(0)
-    count = 0
+    try:
+        cap = cv2.VideoCapture(0)
+    except:
+        print('Failed to camera loading...')
+        return -1
 
     while True:
         try:
@@ -62,19 +66,19 @@ def main(arguments):
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
             # Detection Faces
-            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-            face_count = len(faces)
-            print('Detection faces \n  => Count: ', len(faces))
-        
-            if face_count == 0:
+            faces = face_cascade.detectMultiScale(gray, 1.1, 5)
+
+            if len(faces) == 0:
+                print('Face not detection...')
                 time.sleep(arguments.sleep_second)
                 continue
+            else:
+                print('Detection!')
+                print('  ==> count : {}'.format(len(faces)))
             
             temp = []
             for i, (x, y, w, h) in enumerate(faces):
                 crop_img = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.imwrite('img-{}.jpg'.format(count), crop_img)
-                count += 1
                 crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
                 crop_img = crop_img.tostring()
                 img_id = fs.put(crop_img, encoding='utf-8')
@@ -83,7 +87,7 @@ def main(arguments):
                     'cpu_serial': cpu_serial,
                     'image': crop_img
                 })
-            
+
             # Injection DB
             images.insert_many(temp)
             print('  => Inection DB', end='\n\n')
@@ -96,7 +100,6 @@ def main(arguments):
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    
 
 
 if __name__ == '__main__':
