@@ -13,7 +13,7 @@ load_dotenv()
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cascade', type=str, default='haarcascade_frontface.xml')
-    parser.add_argument('--sleep_second', type=int, default=5)  
+    parser.add_argument('--sleep_second', type=int, default=1)  
     return parser.parse_args()
 
 
@@ -49,11 +49,15 @@ def main(arguments):
     images = image_collection.images
     fs = gridfs.GridFS(image_collection)
 
+    # video capture
+    cap = cv2.VideoCapture(0)
+    count = 0
+
     while True:
         try:
             # Read the input image
-            img = cv2.imread('image.png')
-        
+            ret, img = cap.read()
+
             # Convert into grayscale
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
@@ -63,11 +67,14 @@ def main(arguments):
             print('Detection faces \n  => Count: ', len(faces))
         
             if face_count == 0:
+                time.sleep(arguments.sleep_second)
                 continue
             
             temp = []
             for i, (x, y, w, h) in enumerate(faces):
                 crop_img = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.imwrite('img-{}.jpg'.format(count), crop_img)
+                count += 1
                 crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
                 crop_img = crop_img.tostring()
                 img_id = fs.put(crop_img, encoding='utf-8')
@@ -80,7 +87,7 @@ def main(arguments):
             # Injection DB
             images.insert_many(temp)
             print('  => Inection DB', end='\n\n')
-
+            
             # Sleep
             time.sleep(arguments.sleep_second)
 
