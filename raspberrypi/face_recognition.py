@@ -4,9 +4,11 @@ import sys
 import cv2
 import time
 import copy
+import uuid
 import gridfs
 import pymongo
 import argparse
+import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,7 +16,7 @@ load_dotenv()
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--face_cascade', type=str, default='haarcascade_frontface.xml')
-    parser.add_argument('--sleep_second', type=int, default=0.5)  
+    parser.add_argument('--sleep_second', type=float, default=5)  
     return parser.parse_args()
 
 
@@ -42,7 +44,7 @@ def main(arguments):
     # Load the cascade
     face_cascade = cv2.CascadeClassifier(arguments.face_cascade)
 
-    # Load CPU Serial
+   # Load CPU Serial
     cpu_serial = get_cpu_serial()
 
     # Conecction DB
@@ -56,7 +58,8 @@ def main(arguments):
     except:
         print('Failed to camera loading...')
         return -1
-
+    
+    count = 0
     while True:
         try:
             # Read the input image
@@ -78,14 +81,20 @@ def main(arguments):
             
             temp = []
             for i, (x, y, w, h) in enumerate(faces):
-                crop_img = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                # crop_img = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                crop_img = img[y:y+h, x:x+w]
+                suffix = str(uuid.uuid4())
+                filepath = '_'.join(['./data/img', suffix]) + '.jpg'
+
+                cv2.imwrite(filepath, crop_img)
                 crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
                 crop_img = crop_img.tostring()
-                img_id = fs.put(crop_img, encoding='utf-8')
+                img_id = fs.put(crop_img, encoding='utf8')
 
                 temp.append({
                     'cpu_serial': cpu_serial,
-                    'image': crop_img
+                    'image': crop_img,
+                    'path': filepath
                 })
 
             # Injection DB
@@ -94,7 +103,6 @@ def main(arguments):
             
             # Sleep
             time.sleep(arguments.sleep_second)
-
         except KeyboardInterrupt:
             break
 
