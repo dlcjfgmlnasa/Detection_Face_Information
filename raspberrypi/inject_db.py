@@ -34,18 +34,18 @@ def main():
                 
             if len(file_list) == 0:
                 continue
+
             try:
-                url = os.getenv('TARGET_URL') + 'datacollections/image/'
                 res = requests.post(
-                        url,
+                        os.getenv('TARGET_URL'),
                         data={'cpu_serial_id': _cpu_serial_id},
                         files=file_list)
                 res.raise_for_status()
             except requests.ConnectionError:
                 continue
-            except requests.exceptions.HTTPError as err:
+            except requests.exceptions.HTTPError:
                 continue
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.RequestException:
                 continue
 
             # delete
