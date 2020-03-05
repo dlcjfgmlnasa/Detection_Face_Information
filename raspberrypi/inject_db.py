@@ -21,27 +21,38 @@ def main():
     while True:
         try:
             _cpu_serial_id = None
-            file_list = []
+            ids, file_paths, file_list = [], [], []
+
             for meta in images.find():
                 _id = meta['_id']
                 _cpu_serial_id = meta['cpu_serial']
                 _image_path = meta['path']
 
+                ids.append(_id)
+                file_paths.append(_image_path)
                 file_list.append(('image', open(_image_path, 'rb')))
                 
-                # remove information (mongo, database)
-                images.delete_one({'_id': _id})
-                os.remove(_image_path)
-
             if len(file_list) == 0:
                 continue
+            try:
+                url = os.getenv('TARGET_URL') + 'datacollections/image/'
+                res = requests.post(
+                        url,
+                        data={'cpu_serial_id': _cpu_serial_id},
+                        files=file_list)
+                res.raise_for_status()
+            except requests.ConnectionError:
+                continue
+            except requests.exceptions.HTTPError as err:
+                continue
+            except requests.exceptions.RequestException as e:
+                continue
 
-            url = os.getenv('TARGET_URL') + 'datacollections/image/'
-            res = requests.post(
-                url,
-                data={'cpu_serial_id': _cpu_serial_id},
-                files=file_list
-            )
+            # delete
+            images.delete_many({'_id': {'$in': ids}})
+            for path in file_paths:
+                os.remove(path)
+
         except KeyboardInterrupt:
             break
 
